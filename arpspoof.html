@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mengenal Serangan ARP Spoofing</title>
+    <link rel="stylesheet" href="docstyle.css"> 
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="index.html">Keamanan Jaringan</a></h1>
+            <nav class="nav-kanan">
+                <ul>
+                    <li><a href="index.html">Beranda</a></li>
+                    <li><a href="index.html">Kontak</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container doc-content-wrapper">
+        
+        <aside class="doc-sidebar">
+            <nav class="toc">
+                <h2>Daftar Isi</h2>
+                <ul>
+                    <li><a href="#pendahuluan">1. Pendahuluan</a></li>
+                    <li><a href="#langkahA">2. Langkah 1: Install dsniff</a></li>
+                    <li><a href="#langkahB">3. Langkah 2: Aktifkan IP Forwarding</a></li>
+                    <li><a href="#langkahC">4. Langkah 3: Konsep Serangan</a></li>
+                    <li><a href="#peringatan">5. Peringatan Etika</a></li>
+                    <li><a href="#mitigasi">6. Cara Mitigasi (Pencegahan)</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="doc-main-content">
+
+            <section id="pendahuluan" class="doc-section">
+                <h2>1. Pendahuluan</h2>
+                <p>ARP Spoofing (atau ARP Poisoning) adalah teknik serangan Man-in-the-Middle (MITM) yang digunakan pada jaringan lokal (LAN). Serangan ini memungkinkan penyerang untuk mengintersepsi lalu lintas data antara dua perangkat di jaringan, misalnya antara komputer korban dan router.</p>
+                <p>Tujuan dari tutorial ini adalah untuk memahami cara kerja serangan ini dari sudut pandang defensif, sehingga kita dapat mengetahui cara mencegahnya.</p>
+            </section>
+
+            <section id="langkahA" class="doc-section">
+                <h2>2. Langkah 1: Install dsniff</h2>
+                <p>Alat <code>arpspoof</code> yang populer untuk demonstrasi serangan ini adalah bagian dari paket <code>dsniff</code>. Anda dapat menginstalnya di sistem berbasis Debian (seperti Kali Linux) dengan perintah:</p>
+                <div class="code-block"><code>sudo apt update
+sudo apt install dsniff</code></div>
+            </section>
+
+            <section id="langkahB" class="doc-section">
+                <h2>3. Langkah 2: Aktifkan IP Forwarding</h2>
+                <p>Agar penyerang dapat meneruskan paket dari korban ke router (dan sebaliknya), mereka harus mengaktifkan IP forwarding di sistem operasinya. Jika tidak, serangan ini hanya akan memutus koneksi internet korban (menjadi serangan Denial of Service).</p>
+                <p>Perintah untuk mengaktifkan IP forwarding di Linux adalah:</p>
+                <div class="code-block"><code>sudo sysctl -w net.ipv4.ip_forward=1</code></div>
+                <p>Anda dapat memeriksa statusnya dengan <code>cat /proc/sys/net/ipv4/ip_forward</code> (hasilnya harus 1).</p>
+            </section>
+
+            <section id="langkahC" class="doc-section">
+                <h2>4. Langkah 3: Konsep Serangan</h2>
+                <p>Serangan ini memerlukan dua proses yang berjalan bersamaan di terminal penyerang. Tujuannya adalah untuk "meracuni" cache ARP dari korban dan router.</p>
+                <p>Asumsi IP:</p>
+                <ul>
+                    <li>IP Korban: <code>192.168.1.100</code></li>
+                    <li>IP Router/Gateway: <code>192.168.1.1</code></li>
+                    <li>Interface Penyerang: <code>eth0</code></li>
+                </ul>
+
+                <h3>Proses 1: Meracuni Korban</h3>
+                <p>Penyerang mengirimkan paket ARP ke korban (<code>192.168.1.100</code>) secara terus-menerus. Paket ini memberi tahu korban bahwa alamat MAC untuk IP router (<code>192.168.1.1</code>) adalah alamat MAC milik penyerang.</p>
+
+                <h3>Proses 2: Meracuni Router</h3>
+                <p>Pada saat yang sama, penyerang mengirimkan paket ARP ke router (<code>192.168.1.1</code>). Paket ini memberi tahu router bahwa alamat MAC untuk IP korban (<code>192.168.1.100</code>) adalah alamat MAC milik penyerang.</p>
+                
+                <p>Akibatnya, semua lalu lintas dari korban ke internet akan dikirim ke penyerang terlebih dahulu, dan semua lalu lintas dari internet ke korban juga akan melewati penyerang.</p>
+            </section>
+
+            <section id="peringatan" class="doc-section">
+                <h2>5. Peringatan Etika</h2>
+                <p>Penting untuk diingat bahwa melakukan serangan ini di jaringan yang bukan milik Anda, atau tanpa izin tertulis yang jelas, adalah tindakan ilegal dan tidak etis. Teknik ini hanya boleh dipraktikkan di lingkungan laboratorium yang terisolasi (misalnya, menggunakan Virtual Machine) untuk tujuan pendidikan dan penelitian keamanan.</p>
+            </section>
+
+            <section id="mitigasi" class="doc-section">
+                <h2>6. Cara Mitigasi (Pencegahan)</h2>
+                <p>Memahami cara kerja serangan ini membantu kita untuk bertahan. Berikut adalah beberapa metode pencegahan:</p>
+                <ul>
+                    <li><strong>Entri ARP Statis:</strong> Metode ini melibatkan pengaturan manual alamat MAC yang benar untuk IP tertentu (seperti router) di setiap komputer. Ini efektif tetapi sulit dikelola di jaringan besar.</li>
+                    <li><strong>Dynamic ARP Inspection (DAI):</strong> Ini adalah fitur keamanan pada switch jaringan yang canggih. DAI memeriksa setiap paket ARP dan membuang paket yang dianggap tidak sah atau palsu.</li>
+                    <li><strong>Alat Pemantauan:</strong> Perangkat lunak seperti <code>arpwatch</code> dapat memonitor jaringan untuk perubahan alamat MAC yang mencurigakan dan memberi tahu administrator.</li>
+                </ul>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="doc-footer">
+            <div class="container">
+                <div class="footer-logo">
+                    <img src="Foto/Logo-Universitas-Atma-Jaya-Yogyakarta-Dianisa.com_.png" alt="Logo UAJY" />
+                    <p>Dokumentasi Tutorial. Diperbarui: 13 Oktober 2025.</p>
+                </div>
+            </div>
+    </footer>
+
+</body>
+</html>

