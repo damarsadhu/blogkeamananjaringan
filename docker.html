@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Instalasi Docker di Kali Linux</title>
+    <link rel="stylesheet" href="docstyle.css"> 
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="index.html">Keamanan Jaringan</a></h1>
+            <nav class="nav-kanan">
+                <ul>
+                    <li><a href="index.html">Beranda</a></li>
+                    <li><a href="index.html">Kontak</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container doc-content-wrapper">
+        
+        <aside class="doc-sidebar">
+            <nav class="toc">
+                <h2>Daftar Isi</h2>
+                <ul>
+                    <li><a href="#pendahuluan">1. Pendahuluan</a></li>
+                    <li><a href="#langkahA">2. Langkah 1: Update Sistem</a></li>
+                    <li><a href="#langkahB">3. Langkah 2: Install Paket Pendukung</a></li>
+                    <li><a href="#langkahC">4. Langkah 3: Tambah Repositori Docker</a></li>
+                    <li><a href="#langkahD">5. Langkah 4: Install Docker Engine</a></li>
+                    <li><a href="#langkahE">6. Langkah 5: Jalankan Layanan</a></li>
+                    <li><a href="#langkahF">7. Langkah 6: Verifikasi Instalasi</a></li>
+                    <li><a href="#langkahG">8. Langkah 7: (Opsional) Akses Non-root</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="doc-main-content">
+
+            <section id="pendahuluan" class="doc-section">
+                <h2>1. Pendahuluan</h2>
+                <p>Docker adalah platform kontainerisasi yang memungkinkan Anda untuk membangun, menguji, dan men-deploy aplikasi dengan cepat. Tutorial ini akan memandu Anda cara menginstal Docker Engine di Kali Linux menggunakan repositori resmi Docker.</p>
+                <p>Menggunakan repositori resmi memastikan Anda mendapatkan versi terbaru dan pembaruan keamanan tepat waktu.</p>
+            </section>
+
+            <section id="langkahA" class="doc-section">
+                <h2>2. Langkah 1: Update Paket Sistem</h2>
+                <p>Selalu mulai dengan memperbarui daftar paket dan meng-upgrade sistem Anda untuk memastikan semua dependensi terbaru.</p>
+                <div class="code-block"><code>sudo apt update
+sudo apt upgrade -y</code></div>
+            </section>
+
+            <section id="langkahB" class="doc-section">
+                <h2>3. Langkah 2: Install Paket Pendukung</h2>
+                <p>Instal paket-paket ini agar <code>apt</code> dapat menggunakan repositori melalui HTTPS. Langkah ini opsional namun sangat disarankan.</p>
+                <div class="code-block"><code>sudo apt install -y apt-transport-https ca-certificates curl software-properties-common</code></div>
+            </section>
+
+            <section id="langkahC" class="doc-section">
+                <h2>4. Langkah 3: Tambah Repositori Docker</h2>
+                <p>Selanjutnya, tambahkan kunci GPG resmi Docker dan siapkan repositori Docker. Karena Kali Linux berbasis Debian (saat ini 'bookworm'), kita akan menggunakan repositori Debian.</p>
+                
+                <p>Tambahkan kunci GPG Docker:</p>
+                <div class="code-block"><code>curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg</code></div>
+
+                <p>Tambahkan repositori ke <code>apt</code>:</p>
+                <div class="code-block"><code>echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bookworm stable" | \
+ sudo tee /etc/apt/sources.list.d/docker.list</code></div>
+            </section>
+
+            <section id="langkahD" class="doc-section">
+                <h2>5. Langkah 4: Install Docker Engine</h2>
+                <p>Update kembali daftar paket Anda untuk menyertakan repositori Docker yang baru, lalu instal Docker Engine.</p>
+                <div class="code-block"><code>sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io</code></div>
+            </section>
+            
+            <section id="langkahE" class="doc-section">
+                <h2>6. Langkah 5: Jalankan Layanan Docker</h2>
+                <p>Mulai layanan Docker dan aktifkan agar otomatis berjalan setiap kali sistem boot.</p>
+                <div class="code-block"><code>sudo systemctl enable docker --now</code></div>
+            </section>
+
+            <section id="langkahF" class="doc-section">
+                <h2>7. Langkah 6: Verifikasi Instalasi</h2>
+                <p>Periksa versi Docker untuk memastikan instalasi berhasil. Kemudian, jalankan kontainer 'hello-world' untuk mengkonfirmasi bahwa Docker berfungsi dengan baik.</p>
+                <div class="code-block"><code>docker --version</code></div>
+                
+                <p>Jalankan tes 'hello-world' (perlu sudo saat ini):</p>
+                <div class="code-block"><code>sudo docker run hello-world</code></div>
+                <p>Anda akan melihat pesan bahwa Docker Anda bekerja dengan benar.</p>
+            </section>
+
+            <section id="langkahG" class="doc-section">
+                <h2>8. Langkah 7: (Opsional) Izinkan Pengguna Non-root</h2>
+                <p>Secara default, hanya root yang dapat menjalankan perintah Docker. Untuk mengizinkan pengguna Anda saat ini menjalankan Docker tanpa <code>sudo</code>, tambahkan pengguna tersebut ke grup <code>docker</code>.</p>
+                <div class="code-block"><code>sudo usermod -aG docker $USER</code></div>
+                <p>Anda harus Logout dan Login kembali (atau me-reboot) agar perubahan grup ini diterapkan.</p>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="doc-footer">
+            <div class="container">
+                <div class="footer-logo">
+                    <img src="Foto/Logo-Universitas-Atma-Jaya-Yogyakarta-Dianisa.com_.png" alt="Logo UAJY" />
+                    <p>Dokumentasi Tutorial. Diperbarui: 13 Oktober 2025.</p>
+                </div>
+            </div>
+    </footer>
+
+</body>
+</html>
