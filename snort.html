@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalasi & Konfigurasi Snort 3 di Kali Linux</title>
+    <link rel="stylesheet" href="docstyle.css"> 
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="index.html">Keamanan Jaringan</a></h1>
+            <nav class="nav-kanan">
+                <ul>
+                    <li><a href="index.html">Beranda</a></li>
+                    <li><a href="index.html">Kontak</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container doc-content-wrapper">
+        
+        <aside class="doc-sidebar">
+            <nav class="toc">
+                <h2>Daftar Isi</h2>
+                <ul>
+                    <li><a href="#langkah1">1. Beralih ke Root User</a></li>
+                    <li><a href="#langkah2">2. Update Sistem & Kunci GPG</a></li>
+                    <li><a href="#langkah3">3. Instalasi Snort</a></li>
+                    <li><a href="#langkah4">4. Navigasi Direktori Konfigurasi</a></li>
+                    <li><a href="#langkah5">5. Konfigurasi Utama (snort.lua)</a></li>
+                    <li><a href="#langkah6">6. Membuat Aturan (Rules) Snort</a></li>
+                    <li><a href="#langkah7">7. Uji Coba Snort (Mode Konsol)</a></li>
+                    <li><a href="#langkah8">8. Simulasi Serangan</a></li>
+                    <li><a href="#langkah9">9. Membuat Layanan (Service) Systemd</a></li>
+                    <li><a href="#langkah10">10. Menjalankan Layanan Snort</a></li>
+                    <li><a href="#langkah11">11. Verifikasi Layanan</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="doc-main-content">
+
+            <section id="langkah1" class="doc-section">
+                <h2>1. Beralih ke Root User</h2>
+                <p>Langkah pertama adalah beralih ke pengguna root. Ini diperlukan agar kita memiliki hak akses administratif penuh untuk menginstal paket dan mengubah file konfigurasi sistem.</p>
+                <div class="code-block"><code>sudo su</code></div>
+            </section>
+
+            <section id="langkah2" class="doc-section">
+                <h2>2. Update Sistem & Kunci GPG</h2>
+                <p>Pastikan daftar paket Anda terbaru. Pertama, kita perlu mengimpor dan menyimpan kunci GPG (GNU Privacy Guard) dari repositori Kali Linux agar paket yang diunduh dapat diverifikasi keasliannya.</p>
+                <div class="code-block"><code>curl -fsSL https://archive.kali.org/archive-key.asc | sudo gpg --dearmor -o /usr/share/keyrings/kali-archive-keyring.gpg</code></div>
+                <p>Setelah kunci GPG ditambahkan, perbarui daftar paket Anda:</p>
+                <div class="code-block"><code>apt update</code></div>
+            </section>
+
+            <section id="langkah3" class="doc-section">
+                <h2>3. Instalasi Snort</h2>
+                <p>Setelah repositori diperbarui, instal paket Snort menggunakan manajer paket apt. Opsi <code>-y</code> akan otomatis menjawab 'yes' pada konfirmasi instalasi.</p>
+                <div class="code-block"><code>apt install snort -y</code></div>
+                <p>Verifikasi bahwa Snort telah terpasang dengan benar dengan memeriksa versinya. Perintah ini akan menampilkan versi Snort dan informasi build.</p>
+                <div class="code-block"><code>snort -V</code></div>
+            </section>
+
+            <section id="langkah4" class="doc-section">
+                <h2>4. Navigasi Direktori Konfigurasi</h2>
+                <p>Pindah ke direktori tempat semua file konfigurasi Snort disimpan. Ini adalah lokasi standar untuk file pengaturan Snort.</p>
+                <div class="code-block"><code>cd /etc/snort/</code></div>
+                <p>Lihat isi direktori untuk membiasakan diri dengan file-file konfigurasi yang ada.</p>
+                <div class="code-block"><code>ls -l</code></div>
+            </section>
+            
+            <section id="langkah5" class="doc-section">
+                <h2>5. Konfigurasi Utama (snort.lua)</h2>
+                <p>Pada Snort versi 3, file konfigurasi utamanya adalah <code>snort.lua</code>. Kita akan mengedit file ini menggunakan editor teks (contoh ini menggunakan <code>pico</code>, Anda juga bisa menggunakan <code>nano</code>).</p>
+                <div class="code-block"><code>pico /etc/snort/snort.lua</code></div>
+                <p>Tambahkan blok konfigurasi berikut ke dalam file. Blok <code>ips</code> ini memberi tahu Snort untuk memuat variabel default dan menyertakan file aturan kustom kita (<code>local.rules</code>).</p>
+                <div class="code-block"><code>ips = 
+{ 
+    variables = default_variables, 
+    rules = [[ 
+        include /etc/snort/rules/local.rules 
+    ]] 
+}</code></div>
+                <p>Simpan file dan keluar dari editor (di <code>pico</code> atau <code>nano</code>, gunakan Ctrl + O, Enter, lalu Ctrl + X).</p>
+            </section>
+
+            <section id="langkah6" class="doc-section">
+                <h2>6. Membuat Aturan (Rules) Snort</h2>
+                <p>Sekarang kita akan membuat aturan deteksi kustom. Buat atau edit file <code>local.rules</code> di dalam direktori <code>rules</code>.</p>
+                <div class="code-block"><code>pico /etc/snort/rules/local.rules</code></div>
+                <p>Tambahkan aturan-aturan berikut. Aturan ini dirancang untuk mendeteksi pemindaian Nmap (SYN, Xmas, Null) dan ICMP flood. Pastikan setiap aturan ditulis lengkap dalam satu baris.</p>
+                <div class="code-block"><code>alert tcp any any -> any any (msg:"Nmap SYN Scan Detected"; flags:S; sid:1000001; rev:1;) 
+alert tcp any any -> any any (msg:"Nmap Xmas Scan Detected"; flags:FPU; sid:1000002; rev:1;) 
+alert tcp any any -> any any (msg:"Nmap Null Scan Detected"; flags:0; sid:1000003; rev:1;) 
+alert icmp any any -> any any (msg:"HPING3 ICMP Flood Detected"; sid:1000004; rev:1;)</code></div>
+                <p>Simpan file dan keluar (Ctrl + O, Enter, lalu Ctrl + X).</p>
+            </section>
+
+            <section id="langkah7" class="doc-section">
+                <h2>7. Uji Coba Snort (Mode Konsol)</h2>
+                <p>Sebelum dijalankan sebagai layanan, uji konfigurasi Anda dengan menjalankan Snort di konsol. Ini memungkinkan kita melihat output peringatan (alert) secara langsung.</p>
+                <p>Jika Anda ingin memantau antarmuka jaringan eksternal (misalnya <code>eth0</code>):</p>
+                <div class="code-block"><code>sudo snort -c /etc/snort/snort.lua -R /etc/snort/rules/local.rules -i eth0 -A alert_fast</code></div>
+                <p>Jika Anda ingin menguji pada antarmuka loopback (<code>lo</code>), misalnya untuk tes di localhost:</p>
+                <div class="code-block"><code>sudo snort -c /etc/snort/snort.lua -R /etc/snort/rules/local.rules -i lo -A alert_fast</code></div>
+            </section>
+
+            <section id="langkah8" class="doc-section">
+                <h2>8. Simulasi Serangan</h2>
+                <p>Biarkan Snort berjalan di terminal pertama. Buka terminal kedua dan jalankan simulasi serangan berikut untuk menguji apakah aturan Anda terpicu.</p>
+                <p>Uji Pemindaian Nmap (Targetkan localhost jika Anda memantau <code>lo</code>):</p>
+                <div class="code-block"><code># SYN Scan
+nmap -sS localhost
+
+# Null Scan
+nmap -sN localhost 
+
+# Xmas Scan
+nmap -sX localhost</code></div>
+                <p>Uji ICMP Flood dengan hping3:</p>
+                <div class="code-block"><code>sudo hping3 -1 -c 1000 -d 120 -S -w 64 --flood --rand-source localhost</code></div>
+                <p>Jika berhasil, Anda akan melihat pesan peringatan (alert) muncul di terminal Snort.</p>
+            </section>
+
+            <section id="langkah9" class="doc-section">
+                <h2>9. Membuat Layanan Systemd (Opsional)</h2>
+                <p>Agar Snort berjalan otomatis di latar belakang saat boot, kita akan membuatnya sebagai layanan systemd. Buat file service baru:</p>
+                <div class="code-block"><code>sudo nano /etc/systemd/system/snort.service</code></div>
+                <p>Salin dan tempel konten berikut. Unit file ini mendefinisikan cara menjalankan Snort sebagai layanan. (Catatan: Ubah <code>-i lo</code> jika Anda ingin memantau antarmuka lain).</p>
+                <div class="code-block"><code>[Unit] 
+Description=Snort IDS 
+After=network.target 
+
+[Service] 
+ExecStart=/usr/sbin/snort -c /etc/snort/snort.lua -R /etc/snort/rules/local.rules -i lo -A alert_fast 
+Restart=on-failure 
+
+[Install] 
+WantedBy=multi-user.target</code></div>
+                <p>Simpan dan keluar (Ctrl + O, Enter, Ctrl + X).</p>
+            </section>
+
+            <section id="langkah10" class="doc-section">
+                <h2>10. Menjalankan Layanan Snort</h2>
+                <p>Muat ulang daemon systemd agar sistem mengenali file layanan baru Anda.</p>
+                <div class="code-block"><code>sudo systemctl daemon-reload</code></div>
+                <p>Aktifkan layanan Snort agar otomatis berjalan setiap kali sistem boot.</p>
+                <div class="code-block"><code>sudo systemctl enable snort</code></div>
+                <p>Mulai layanan Snort sekarang juga.</p>
+                <div class="code-block"><code>sudo systemctl start snort</code></div>
+                <p>Jika Anda perlu menghentikannya, gunakan perintah berikut:</p>
+                <div class="code-block"><code>sudo systemctl stop snort</code></div>
+            </section>
+
+            <section id="langkah11" class="doc-section">
+                <h2>11. Verifikasi Layanan</h2>
+                <p>Terakhir, periksa status layanan Snort untuk memastikan layanan tersebut berjalan dengan benar di latar belakang.</p>
+                <div class="code-block"><code>sudo systemctl status snort</code></div>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="doc-footer">
+            <div class="container">
+                <div class="footer-logo">
+                    <img src="Foto/Logo-Universitas-Atma-Jaya-Yogyakarta-Dianisa.com_.png" alt="Logo UAJY" />
+                    <p>Dokumentasi Tutorial. Diperbarui: 13 Oktober 2025.</p>
+                </div>
+            </div>
+    </footer>
+
+</body>
+</html>
