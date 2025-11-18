@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalasi Server Wazuh (All-in-One) di Ubuntu</title>
+    <link rel="stylesheet" href="docstyle.css"> 
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="index.html">Keamanan Jaringan</a></h1>
+            <nav class="nav-kanan">
+                <ul>
+                    <li><a href="index.html">Beranda</a></li>
+                    <li><a href="index.html">Kontak</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container doc-content-wrapper">
+        
+        <aside class="doc-sidebar">
+            <nav class="toc">
+                <h2>Daftar Isi</h2>
+                <ul>
+                    <li><a href="#langkah1">1. Perluas Root Storage (LVM)</a></li>
+                    <li><a href="#langkah2">2. Unduh Installer Wazuh</a></li>
+                    <li><a href="#langkah3">3. Konfigurasi (config.yml)</a></li>
+                    <li><a href="#langkah4">4. Instalasi Wazuh Indexer</a></li>
+                    <li><a href="#langkah5">5. Instalasi Wazuh Manager</a></li>
+                    <li><a href="#langkah6">6. Instalasi Wazuh Dashboard</a></li>
+                    <li><a href="#langkah7">7. Akses Dashboard & Password</a></li>
+                    <li><a href="#langkah8">8. Menambahkan Rules Kustom</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="doc-main-content">
+
+            <section id="langkah1" class="doc-section">
+                <h2>1. Perluas Root Storage (LVM)</h2>
+                <p>Menginstal berbagai tools server VM seringkali memakan banyak ruang penyimpanan. Jika partisi root (/) Anda menggunakan LVM (Logical Volume Management) dan ruangnya hampir habis, Anda dapat memperluasnya.</p>
+                <p>Perintah ini akan memperluas Logical Volume (LV) root sebesar 80% dari ruang kosong yang tersedia di Volume Group (VG) Anda.</p>
+                <div class="code-block"><code>sudo lvextend -l +80%FREE /dev/ubuntu-vg/ubuntu-lv</code></div>
+                <p>Setelah LV diperluas, Anda perlu mengubah ukuran filesystem (asumsi menggunakan ext4) agar dapat menggunakan ruang baru tersebut.</p>
+                <div class="code-block"><code>sudo resize2fs /dev/ubuntu-vg/ubuntu-lv</code></div>
+                <p>Tampilkan penggunaan disk untuk memverifikasi bahwa partisi root (/) telah bertambah besar.</p>
+                <div class="code-block"><code>df -h</code></div>
+            </section>
+
+            <section id="langkah2" class="doc-section">
+                <h2>2. Unduh Installer Wazuh</h2>
+                <p>Pastikan Anda berada di direktori home pengguna Anda sebelum mengunduh file.</p>
+                <div class="code-block"><code>cd ~</code></div>
+                <p>Unduh skrip instalasi Wazuh versi 4.13 (atau versi lain yang sesuai).</p>
+                <div class="code-block"><code>curl -sO https://packages.wazuh.com/4.13/wazuh-install.sh</code></div>
+                <p>Unduh juga file konfigurasi default-nya.</p>
+                <div class="code-block"><code>curl -sO https://packages.wazuh.com/4.13/config.yml</code></div>
+            </section>
+
+            <section id="langkah3" class="doc-section">
+                <h2>3. Konfigurasi (config.yml)</h2>
+                <p>Kita akan melakukan instalasi "All-in-One", di mana Indexer, Manager, dan Dashboard berada di satu server yang sama. Oleh karena itu, kita akan mengedit file <code>config.yml</code> untuk menggunakan IP localhost (127.0.0.1) untuk semua komponen.</p>
+                <div class="code-block"><code>nano config.yml</code></div>
+                <p>Di dalam editor, cari bagian <code>nodes</code> dan ganti alamat IP untuk <code>indexer</code>, <code>server</code>, dan <code>dashboard</code> menjadi <code>127.0.0.1</code>.</p>
+            </section>
+
+            <section id="langkah4" class="doc-section">
+                <h2>4. Instalasi Wazuh Indexer</h2>
+                <p>Jalankan installer untuk menghasilkan file konfigurasi kustom dan sertifikat berdasarkan <code>config.yml</code> Anda.</p>
+                <div class="code-block"><code>bash wazuh-install.sh --generate-config-files</code></div>
+                <p>Instal dan konfigurasikan komponen Wazuh Indexer.</p>
+                <div class="code-block"><code>bash wazuh-install.sh --wazuh-indexer node-1</code></div>
+                <p>Muat sertifikat yang baru dibuat dan mulai cluster indexer.</p>
+                <div class="code-block"><code>bash wazuh-install.sh --start-cluster</code></div>
+                <p>Ekstrak dan tampilkan password admin dari arsip yang baru dibuat. Catat password ini.</p>
+                <div class="code-block"><code>tar -axf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O | grep -P "'admin'" -A 1</code></div>
+                <p>Uji koneksi HTTPS ke Wazuh Indexer. Ganti <code>&lt;ADMIN_PASSWORD&gt;</code> dengan password yang Anda catat dan <code>&lt;WAZUH_INDEXER_IP&gt;</code> dengan <code>127.0.0.1</code>.</p>
+                <div class="code-block"><code>curl -k -u admin:&lt;ADMIN_PASSWORD&gt; https://127.0.0.1:9200</code></div>
+                <p>Periksa status node pada cluster indexer.</p>
+                <div class="code-block"><code>curl -k -u admin:&lt;ADMIN_PASSWORD&gt; https://127.0.0.1:9200/_cat/nodes?v</code></div>
+                <p>Aktifkan layanan wazuh-indexer agar otomatis berjalan saat boot.</p>
+                <div class="code-block"><code>sudo systemctl enable wazuh-indexer</code></div>
+                <p>Periksa status layanan untuk memastikan berjalan dengan benar.</p>
+                <div class="code-block"><code>sudo systemctl status wazuh-indexer</code></div>
+            </section>
+
+            <section id="langkah5" class="doc-section">
+                <h2>5. Instalasi Wazuh Manager</h2>
+                <p>Instal komponen Wazuh Manager (Server).</p>
+                <div class="code-block"><code>bash wazuh-install.sh --wazuh-server wazuh-1</code></div>
+                <p>Filebeat digunakan oleh manager untuk mengirim data ke indexer. Restart layanannya agar konfigurasi baru diterapkan.</p>
+                <div class="code-block"><code>systemctl restart filebeat</code></div>
+                <p>Uji koneksi output Filebeat.</p>
+                <div class="code-block"><code>filebeat test output</code></div>
+                <p>Aktifkan layanan wazuh-manager agar otomatis berjalan saat boot.</p>
+                <div class="code-block"><code>sudo systemctl enable wazuh-manager</code></div>
+                <p>Periksa status layanan.</p>
+                <div class="code-block"><code>sudo systemctl status wazuh-manager</code></div>
+            </section>
+
+            <section id="langkah6" class="doc-section">
+                <h2>6. Instalasi Wazuh Dashboard</h2>
+                <p>Instal komponen Wazuh Dashboard (antarmuka web).</p>
+                <div class="code-block"><code>bash wazuh-install.sh --wazuh-dashboard dashboard</code></div>
+                <p>Aktifkan layanan wazuh-dashboard agar otomatis berjalan saat boot.</p>
+                <div class="code-block"><code>sudo systemctl enable wazuh-dashboard</code></div>
+                <p>Periksa status layanan.</p>
+                <div class="code-block"><code>sudo systemctl status wazuh-dashboard</code></div>
+            </section>
+
+            <section id="langkah7" class="doc-section">
+                <h2>7. Akses Dashboard & Password</h2>
+                <p>Tampilkan kembali semua password yang telah dihasilkan oleh installer. Kali ini, cari kredensial untuk "Admin user for the web user interface".</p>
+                <div class="code-block"><code>sudo tar -O -xvf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt</code></div>
+                <p>Buka browser dan akses dashboard Wazuh Anda. Ganti <code>&lt;WAZUH_DASHBOARD_IP_ADDRESS&gt;</code> dengan alamat IP publik server Ubuntu Anda.</p>
+                <p><code>https://&lt;WAZUH_DASHBOARD_IP_ADDRESS&gt;</code></p>
+                <p>Login menggunakan username <code>admin</code> dan password yang Anda catat dari langkah sebelumnya.</p>
+            </section>
+            
+            <section id="langkah8" class="doc-section">
+                <h2>8. Menambahkan Rules Kustom</h2>
+                <p>Setelah login ke dashboard Wazuh, navigasi ke menu "Management" > "Rules".</p>
+                <ol>
+                    <li>Pilih tab "Custom rules".</li>
+                    <li>Klik "Add new rules file".</li>
+                    <li>Beri nama file tersebut, misalnya: <code>locale-custom.xml</code>.</li>
+                    <li>Salin dan tempel ruleset XML berikut ke dalam editor.</li>
+                </ol>
+                <p>Ruleset ini berisi contoh aturan kustom untuk mendeteksi aktivitas dari honeypot Cowrie dan IDS Suricata.</p>
+                <div class="code-block"><code><pre>
+&lt;group name="cowrie,Suricata,local,"&gt;
+  
+  &lt;!-- [  Cowrie  ] --&gt;
+
+  &lt;!-- [cowrie login] --&gt;
+  &lt;rule id="120000" level="3"&gt;
+    &lt;decoded_as&gt;json&lt;/decoded_as&gt;
+    &lt;field name="eventid"&gt;cowrie.login.failed&lt;/field&gt;
+    &lt;description&gt;Cowrie: Alert $(message)&lt;/description&gt;
+    &lt;group&gt;cowrie,auth,failed,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;rule id="120001" level="7"&gt;
+    &lt;decoded_as&gt;json&lt;/decoded_as&gt;
+    &lt;field name="eventid"&gt;cowrie.login.success&lt;/field&gt;
+    &lt;description&gt;Cowrie: Alert $(src_ip) logged in to honeypot $(message)&lt;/description&gt;
+    &lt;group&gt;cowrie,auth,success,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;rule id="120002" level="5"&gt;
+    &lt;decoded_as&gt;json&lt;/decoded_as&gt;
+    &lt;field name="eventid"&gt;cowrie.command.input&lt;/field&gt;
+    &lt;description&gt;Cowrie: Alert $(src_ip) is running $(message)&lt;/description&gt;
+    &lt;group&gt;cowrie,auth,success,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;rule id="120100" level="10" frequency="5" timeframe="60"&gt;
+    &lt;if_matched_sid&gt;120000&lt;/if_matched_sid&gt;
+    &lt;field name="src_ip" same_value="yes"/&gt;
+    &lt;description&gt;Cowrie: Repeated failed login attempt by the same IP.&lt;/description&gt;
+    &lt;group&gt;cowrie,auth,failed,bruteforce,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;rule id="120200" level="13" frequency="15" timeframe="60"&gt;
+    &lt;if_matched_sid&gt;120000&lt;/if_matched_sid&gt;
+    &lt;field name="src_ip" same_value="yes"/&gt;
+    &lt;description&gt;Cowrie: Bruteforce attempt detected.&lt;/description&gt;
+    &lt;group&gt;cowrie,auth,failed,bruteforce,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;!-- [cowrie Nmap ] --&gt;
+  &lt;rule id="120003" level="1"&gt;
+    &lt;decoded_as&gt;json&lt;/decoded_as&gt;
+    &lt;field name="eventid"&gt;cowrie.client.version&lt;/field&gt;
+    &lt;match&gt;Nmap&lt;/match&gt;
+    &lt;description&gt;Cowrie: SSH probe from Nmap detected (client version includes 'Nmap').&lt;/description&gt;
+    &lt;group&gt;cowrie,scan,nmap,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;!-- Escalate: burst of Nmap probes from the same IP --&gt;
+  &lt;rule id="120103" level="10" frequency="5" timeframe="10"&gt;
+    &lt;if_matched_sid&gt;120003&lt;/if_matched_sid&gt;
+    &lt;field name="src_ip" same_value="yes"/&gt;
+    &lt;description&gt;Cowrie: Likely nmap -A scan — multiple Nmap SSH probes from $(src_ip) in short time.&lt;/description&gt;
+    &lt;group&gt;cowrie,scan,nmap,bruteforce,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;!-- [  Suricata  ] --&gt;
+
+  &lt;!-- [Suricata Nmap] --&gt;
+  &lt;rule id="900201" level="2"&gt;
+    &lt;if_sid&gt;86601&lt;/if_sid&gt;
+    &lt;match&gt;SCAN&lt;/match&gt;
+    &lt;description&gt;Suricata: Alert SCAN from $(src_ip)&lt;/description&gt;
+    &lt;group&gt;suricata&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;rule id="900202" level="10"&gt;
+    &lt;if_sid&gt;86601&lt;/if_sid&gt;
+    &lt;match&gt;NMAP&lt;/match&gt;
+    &lt;description&gt;Suricata: Alert Aggressive NMAP SCAN from $(src_ip)&lt;/description&gt;
+    &lt;group&gt;suricata&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;rule id="900203" level="11" frequency="4" timeframe="30" ignore="5"&gt;
+    &lt;if_matched_sid&gt;900201&lt;/if_matched_sid&gt;
+    &lt;field name="src_ip" same_value="yes"/&gt;
+    &lt;description&gt;Suricata: Alert NMAP SCAN from $(src_ip)&lt;/description&gt;
+    &lt;group&gt;suricata,nmap,bruteforce,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;!-- [Suricata DOS] --&gt;
+  &lt;rule id="900204" level="2"&gt;
+    &lt;if_sid&gt;86601&lt;/if_sid&gt;
+    &lt;field name="alert.signature_id"&gt;1000882&lt;/field&gt;
+    &lt;description&gt;Suricata: Massive amount of packet from $(src_ip)&lt;/description&gt;
+    &lt;group&gt;suricata&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;rule id="900205" level="10" frequency="5" timeframe="30"&gt;
+    &lt;if_matched_sid&gt;900204&lt;/if_matched_sid&gt;
+    &lt;field name="src_ip" same_value="yes"/&gt;
+    &lt;description&gt;Suricata: Alert DOS ATTACK from $(src_ip)&lt;/description&gt;
+    &lt;group&gt;suricata,nmap,bruteforce,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;rule id="900301" level="2"&gt;
+    &lt;if_sid&gt;86601&lt;/if_sid&gt;
+    &lt;field name="alert.signature_id"&gt;2100366&lt;/field&gt;
+    &lt;description&gt;Suricata: Alert - GPL ICMP_INFO PING *NIX&lt;/description&gt;
+    &lt;group&gt;suricata&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;rule id="900302" level="10" frequency="1000" timeframe="30" ignore="15"&gt;
+    &lt;if_matched_sid&gt;900301&lt;/if_matched_sid&gt;
+    &lt;field name="src_ip" same_value="yes"/&gt;
+    &lt;description&gt;Suricata: Alert DOS ICMP ATTACK from $(src_ip)&lt;/description&gt;
+    &lt;group&gt;suricata,nmap,bruteforce,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;!-- [Suricata BruteForce] --&gt;
+  &lt;rule id="900206" level="11"&gt;
+    &lt;if_sid&gt;86601&lt;/if_sid&gt;
+    &lt;field name="alert.signature_id"&gt;2006546&lt;/field&gt;
+    &lt;description&gt;Suricata: Likely Bruteforce attack from $(src_ip)&lt;/description&gt;
+    &lt;group&gt;suricata&lt;/group&gt;
+  &lt;/rule&gt;
+&lt;/group&gt;
+</pre></code></div>
+                <p>Klik "Save" dan restart Wazuh Manager dari dashboard untuk menerapkan aturan baru.</p>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="doc-footer">
+            <div class="container">
+                <div class="footer-logo">
+                    <img src="Foto/Logo-Universitas-Atma-Jaya-Yogyakarta-Dianisa.com_.png" alt="Logo UAJY" />
+                    <p>Dokumentasi Tutorial. Diperbarui: 13 Oktober 2025.</p>
+                </div>
+            </div>
+    </footer>
+
+</body>
+</html>
