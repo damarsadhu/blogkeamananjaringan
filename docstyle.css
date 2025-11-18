@@ -180,11 +180,10 @@ a:hover {
 /* ======================================= */
 
 .code-block {
-    overflow-x: auto; /* Ini adalah kuncinya */
-    
-    /* Style tambahan agar blok kode terlihat rapi */
-    background-color: #f4f4f4; 
-    border: 1px solid #ddd;
+    overflow-x: auto; 
+    background-color: #2d2d2d; /* <-- GANTI JADI HITAM/GELAP */
+    color: #f1f1f1;            /* <-- TAMBAHKAN WARNA TEKS TERANG */
+    border: 1px solid #444;    /* <-- Border diganti agar cocok */
     padding: 10px;
     margin: 10px 0;
     font-family: monospace;
