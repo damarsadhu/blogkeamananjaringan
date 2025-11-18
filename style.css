@@ -9,7 +9,7 @@ body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     background-color: #F7F7F0; /* Off-White/Abu-abu Sangat Muda */
-    color: #333;
+    color: #333; /* INI SUDAH DIPERBAIKI */
 }
 
 a {
@@ -207,3 +207,18 @@ a:hover {
     color: #555;
 }
 
+/* TAMBAHKAN INI DI BAGIAN AKHIR docstyle.css */
+
+.code-block {
+    overflow-x: auto; /* Ini adalah kuncinya */
+    
+    background-color: #f4f4f4; 
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 10px 0;
+    font-family: monospace;
+}
+
+.code-block pre {
+    white-space: pre; 
+}

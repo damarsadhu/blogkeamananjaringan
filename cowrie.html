@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalasi Honeypot Cowrie (SSH & Telnet)</title>
+    <link rel="stylesheet" href="docstyle.css"> 
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="index.html">Keamanan Jaringan</a></h1>
+            <nav class="nav-kanan">
+                <ul>
+                    <li><a href="index.html">Beranda</a></li>
+                    <li><a href="index.html">Kontak</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container doc-content-wrapper">
+        
+        <aside class="doc-sidebar">
+            <nav class="toc">
+                <h2>Daftar Isi</h2>
+                <ul>
+                    <li><a href="#langkah1">1. Persiapan User Cowrie</a></li>
+                    <li><a href="#langkah2">2. Instalasi Python 3.12</a></li>
+                    <li><a href="#langkah3">3. Kloning & Setup Cowrie</a></li>
+                    <li><a href="#langkah4">4. Instalasi Dependensi</a></li>
+                    <li><a href="#langkah5">5. Konfigurasi Dasar Cowrie</a></li>
+                    <li><a href="#langkah6">6. (Opsional) Konfigurasi Supervisor</a></li>
+                    <li><a href="#langkah7">7. Konfigurasi Agen Wazuh</a></li>
+                    <li><a href="#langkah8">8. Verifikasi Integrasi Wazuh</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="doc-main-content">
+
+            <section id="langkah1" class="doc-section">
+                <h2>1. Persiapan User Cowrie</h2>
+                <p>Untuk alasan keamanan, Cowrie harus dijalankan sebagai pengguna non-root. Buat user sistem baru bernama <code>cowrie</code>.</p>
+                <div class="code-block"><code>sudo adduser cowrie</code></div>
+                <p>Tambahkan user <code>cowrie</code> ke grup <code>sudo</code>. (Tinjau kembali kebutuhan keamanan ini; untuk produksi, lebih baik gunakan <code>authbind</code> agar bisa berjalan di port 22 tanpa root).</p>
+                <div class="code-block"><code>sudo usermod -aG sudo cowrie</code></div>
+                <p>Berpindah ke user <code>cowrie</code> yang baru saja dibuat.</p>
+                <div class="code-block"><code>su cowrie</code></div>
+            </section>
+
+            <section id="langkah2" class="doc-section">
+                <h2>2. Instalasi Python 3.12</h2>
+                <p>Masuk ke direktori home user <code>cowrie</code>.</p>
+                <div class="code-block"><code>cd ~</code></div>
+                <p>Cowrie membutuhkan versi Python yang modern. Kita akan menginstal Python 3.12 menggunakan PPA (Personal Package Archive) <code>deadsnakes</code>.</p>
+                <p>Perbarui indeks paket.</p>
+                <div class="code-block"><code>sudo apt update</code></div>
+                <p>Instal utilitas manajemen repositori.</p>
+                <div class="code-block"><code>sudo apt install software-properties-common -y</code></div>
+                <p>Tambahkan PPA deadsnakes.</p>
+                <div class="code-block"><code>sudo add-apt-repository ppa:deadsnakes/ppa</code></div>
+                <p>Refresh indeks paket setelah menambah PPA.</p>
+                <div class="code-block"><code>sudo apt update</code></div>
+                <p>Instal Python 3.12 dan modul virtual environment (venv).</p>
+                <div class="code-block"><code>sudo apt install python3.12 python3.12-venv -y</code></div>
+                <p>Verifikasi bahwa Python 3.12 telah terinstal.</p>
+                <div class="code-block"><code>python3.12 --version</code></div>
+            </section>
+
+            <section id="langkah3" class="doc-section">
+                <h2>3. Kloning & Setup Cowrie</h2>
+                <p>Klon (unduh) repositori Cowrie dari GitHub.</p>
+                <div class="code-block"><code>git clone http://github.com/cowrie/cowrie</code></div>
+                <p>Masuk ke direktori Cowrie yang baru saja diunduh.</p>
+                <div class="code-block"><code>cd cowrie</code></div>
+                <p>Buat lingkungan virtual (virtualenv) Python agar dependensi Cowrie terisolasi dari sistem.</p>
+                <div class="code-block"><code>python3.12 -m venv cowrie-env</code></div>
+                <p>Aktifkan virtualenv tersebut. Prompt terminal Anda akan berubah.</p>
+                <div class="code-block"><code>source cowrie-env/bin/activate</code></div>
+            </section>
+
+            <section id="langkah4" class="doc-section">
+                <h2>4. Instalasi Dependensi</h2>
+                <p>Instal dependensi level sistem yang dibutuhkan oleh Cowrie.</p>
+                <div class="code-block"><code>sudo apt-get install git python3-pip libssl-dev libffi-dev build-essential libpython3-dev python3-minimal authbind -y</code></div>
+                <p>Perbarui <code>pip</code> (manajer paket Python) di dalam virtualenv Anda.</p>
+                <div class="code-block"><code>python -m pip install --upgrade pip</code></div>
+                <p>Instal Cowrie dan dependensi Python-nya dari direktori saat ini.</p>
+                <div class="code-block"><code>python -m pip install -e .</code></div>
+            </section>
+
+            <section id="langkah5" class="doc-section">
+                <h2>5. Konfigurasi Dasar Cowrie</h2>
+                <p>Salin file konfigurasi contoh (<code>.dist</code>) menjadi file konfigurasi aktif (<code>.cfg</code>).</p>
+                <div class="code-block"><code>cp /home/cowrie/cowrie/etc/cowrie.cfg.dist /home/cowrie/cowrie/etc/cowrie.cfg</code></div>
+                <p>Edit file konfigurasi. Sebagai contoh, kita akan mengaktifkan honeypot Telnet (selain SSH yang sudah aktif secara default).</p>
+                <div class="code-block"><code>nano /home/cowrie/cowrie/etc/cowrie.cfg</code></div>
+                <p>Cari bagian <code>[telnet]</code> dan ubah <code>enabled = false</code> menjadi <code>true</code>.</p>
+                <div class="code-block"><code>[telnet]
+enabled = true</code></div>
+                <p>Untuk menjalankan Cowrie secara manual (tetap berada di dalam virtualenv), gunakan:</p>
+                <div class="code-block"><code>cowrie start</code></div>
+                <p>Selanjutnya, beri izin baca (sementara) pada file log JSON dan direktorinya agar nanti bisa dibaca oleh Wazuh.</p>
+                <div class="code-block"><code>sudo chmod 777 /home/cowrie/cowrie/var/log/cowrie/cowrie.json
+sudo chmod 777 /home/cowrie/cowrie/var/log/cowrie/</code></div>
+            </section>
+
+            <section id="langkah6" class="doc-section">
+                <h2>6. (Opsional) Konfigurasi Supervisor</h2>
+                <p>Supervisor adalah manajer proses yang akan menjaga Cowrie tetap berjalan dan me-restartnya secara otomatis. Ini sangat disarankan untuk penggunaan jangka panjang.</p>
+                <p>Beralih ke root dan masuk ke home root untuk instalasi Supervisor.</p>
+                <div class="code-block"><code>sudo su && cd ~</code></div>
+                <p>Instal Supervisor dan aktifkan layanannya.</p>
+                <div class="code-block"><code>sudo apt install supervisor -y
+systemctl enable supervisor
+systemctl start supervisor
+systemctl status supervisor</code></div>
+
+                <p>Lakukan pembersihan. Hentikan proses Cowrie yang mungkin masih berjalan (abaikan error jika tidak ditemukan).</p>
+                <div class="code-block"><code>sudo supervisorctl stop cowrie || true
+/home/cowrie/cowrie/cowrie-env/bin/cowrie stop || true
+rm -f /home/cowrie/cowrie/var/run/cowrie.pid
+pgrep -a twistd || true</code></div>
+
+                <p>Buat file konfigurasi Supervisor untuk Cowrie.</p>
+                <div class="code-block"><code>nano /etc/supervisor/conf.d/cowrie.conf</code></div>
+                <p>Isi dengan konfigurasi berikut, yang memberi tahu Supervisor cara menjalankan Cowrie sebagai user <code>cowrie</code>.</p>
+                <div class="code-block"><pre>
+[program:cowrie]
+directory=/home/cowrie/cowrie/
+command=/home/cowrie/cowrie/cowrie-env/bin/twistd --umask=0022 --pidfile= -n --logger cowrie.python.logfile.logger cowrie
+user=cowrie
+autostart=true
+autorestart=true
+stopsignal=TERM
+stopasgroup=true
+killasgroup=true
+redirect_stderr=true
+stdout_logfile=/home/cowrie/cowrie/var/log/cowrie/supervisor.out.log
+stderr_logfile=/home/cowrie/cowrie/var/log/cowrie/supervisor.err.log
+environment=PATH="/home/cowrie/cowrie/cowrie-env/bin:%(ENV_PATH)s"
+</pre></div>
+                <p>Muat ulang konfigurasi Supervisor dan mulai Cowrie.</p>
+                <div class="code-block"><code>sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start cowrie
+sudo supervisorctl status cowrie</code></div>
+            </section>
+
+            <section id="langkah7" class="doc-section">
+                <h2>7. Konfigurasi Agen Wazuh</h2>
+                <p>Terakhir, kita perlu memberitahu agen Wazuh di VM ini untuk memantau file log JSON dari Cowrie dan Suricata.</p>
+                <p>Edit file konfigurasi agen Wazuh (<code>ossec.conf</code>) di VM honeypot ini.</p>
+                <div class="code-block"><code>sudo nano /var/ossec/etc/ossec.conf</code></div>
+                <p>Tambahkan blok <code>&lt;localfile&gt;</code> berikut di bagian paling bawah file (namun tetap di dalam tag <code>&lt;ossec_config&gt;</code>).</p>
+                <div class="code-block"><pre>
+&lt;ossec_config&gt;
+
+  &lt;localfile&gt;
+    &lt;log_format&gt;json&lt;/log_format&gt;
+    &lt;location&gt;/var/log/suricata/alert.json&lt;/location&gt;
+  &lt;/localfile&gt;
+
+  &lt;localfile&gt;
+    &lt;log_format&gt;json&lt;/log_format&gt;
+    &lt;location&gt;/home/cowrie/cowrie/var/log/cowrie/cowrie.json&lt;/location&gt;
+  &lt;/localfile&gt;
+
+&lt;/ossec_config&gt;
+</pre></div>
+                <p>Pastikan Anda menempatkan <code>&lt;localfile&gt;</code> di dalam <code>&lt;ossec_config&gt;</code>, bukan membungkusnya.</p>
+            </section>
+            
+            <section id="langkah8" class="doc-section">
+                <h2>8. Verifikasi Integrasi Wazuh</h2>
+                <p>Restart layanan agen Wazuh agar mulai memonitor file log baru.</p>
+                <div class="code-block"><code>sudo systemctl restart wazuh-agent</code></div>
+                <p>Tampilkan 30 baris terakhir dari log Wazuh Agent. Anda dapat mencari pesan yang menunjukkan bahwa agen sedang memonitor file log Cowrie.</p>
+                <div class="code-block"><code>sudo tail -30 /var/ossec/logs/ossec.log</code></div>
+                <p>Jika berhasil, log akan menunjukkan bahwa file log baru sedang diproses, dan Anda akan segera melihat event dari Cowrie dan Suricata muncul di dashboard Wazuh.</p>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="doc-footer">
+            <div class="container">
+                <div class="footer-logo">
+                    <img src="Foto/Logo-Universitas-Atma-Jaya-Yogyakarta-Dianisa.com_.png" alt="Logo UAJY" />
+                    <p>Dokumentasi Tutorial. Diperbarui: 13 Oktober 2025.</p>
+                </div>
+            </div>
+    </footer>
+
+</body>
+</html>

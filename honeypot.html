@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Setup VM Honeypot & Instalasi Agen Wazuh</title>
+    <link rel="stylesheet" href="docstyle.css"> 
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="index.html">Keamanan Jaringan</a></h1>
+            <nav class="nav-kanan">
+                <ul>
+                    <li><a href="index.html">Beranda</a></li>
+                    <li><a href="index.html">Kontak</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container doc-content-wrapper">
+        
+        <aside class="doc-sidebar">
+            <nav class="toc">
+                <h2>Daftar Isi</h2>
+                <ul>
+                    <li><a href="#langkah1">1. Pendahuluan</a></li>
+                    <li><a href="#langkah2">2. Instalasi Utilitas Dasar</a></li>
+                    <li><a href="#langkah3">3. Pemasangan Agen Wazuh</a></li>
+                    <li><a href="#langkah4">4. Verifikasi Koneksi Agen</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="doc-main-content">
+
+            <section id="langkah1" class="doc-section">
+                <h2>1. Pendahuluan</h2>
+                <p>Tutorial ini mencakup langkah-langkah persiapan awal untuk sebuah Virtual Machine (VM) yang akan difungsikan sebagai Honeypot. Persiapan ini meliputi instalasi beberapa utilitas penting dan pendaftaran VM sebagai agen di server Wazuh untuk pemantauan.</p>
+            </section>
+
+            <section id="langkah2" class="doc-section">
+                <h2>2. Instalasi Utilitas Dasar</h2>
+                <p>Kita akan menginstal beberapa paket dasar yang diperlukan untuk mengelola server dan mengunduh perangkat lunak honeypot nantinya.</p>
+
+                <h3>Instalasi OpenSSH</h3>
+                <p>Instal OpenSSH server agar VM ini dapat diakses dari jarak jauh.</p>
+                <div class="code-block"><code>sudo apt install ssh -y</code></div>
+                <p>Aktifkan layanan SSH agar otomatis berjalan saat sistem boot.</p>
+                <div class="code-block"><code>sudo systemctl enable ssh</code></div>
+                <p>Periksa status layanan SSH untuk memastikan sudah berjalan.</p>
+                <div class="code-block"><code>sudo systemctl status ssh</code></div>
+
+                <h3>Instalasi cURL</h3>
+                <p>Instal cURL, sebuah alat baris perintah untuk mentransfer data menggunakan berbagai protokol.</p>
+                <div class="code-block"><code>sudo apt install curl -y</code></div>
+                <p>Tampilkan versi cURL untuk verifikasi.</p>
+                <div class="code-block"><code>curl -V</code></div>
+                
+                <h3>Instalasi Git</h3>
+                <p>Instal Git, yang akan kita perlukan nanti untuk mengkloning repositori perangkat lunak honeypot.</p>
+                <div class="code-block"><code>sudo apt install git -y</code></div>
+                <p>Tampilkan versi Git untuk verifikasi.</p>
+                <div class="code-block"><code>git --version</code></div>
+            </section>
+
+            <section id="langkah3" class="doc-section">
+                <h2>3. Pemasangan Agen Wazuh</h2>
+                <p>Langkah selanjutnya adalah mendaftarkan VM Honeypot ini ke Wazuh Manager Anda agar aktivitasnya dapat dipantau.</p>
+                
+                <ol>
+                    <li>Buka dashboard Wazuh Anda di browser.</li>
+                    <li>Navigasi ke menu "Agents".</li>
+                    <li>Klik pada tombol "Deploy new agent".</li>
+                    <li>Pilih sistem operasi VM Honeypot Anda (misalnya: Ubuntu).</li>
+                    <li>Masukkan alamat IP atau DNS dari Wazuh Manager Anda.</li>
+                    <li>Ikuti petunjuk di layar, terutama langkah 4 dan 5 yang berisi perintah instalasi.</li>
+                </ol>
+                
+                <p>Wazuh akan menyediakan satu baris perintah kustom. Salin dan jalankan perintah tersebut di terminal VM Honeypot Anda. Perintah itu akan mengunduh, menginstal, dan mendaftarkan agen secara otomatis.</p>
+            </section>
+
+            <section id="langkah4" class="doc-section">
+                <h2>4. Verifikasi Koneksi Agen</h2>
+                <p>Setelah skrip instalasi selesai, kita perlu memverifikasi koneksi dari kedua sisi (Agen dan Manajer).</p>
+                
+                <h3>Di VM Honeypot (Agen):</h3>
+                <p>Periksa status layanan wazuh-agent untuk memastikan layanan berjalan tanpa error.</p>
+                <div class="code-block"><code>sudo systemctl status wazuh-agent</code></div>
+
+                <h3>Di Server VM (Wazuh Manager):</h3>
+                <p>Untuk mengkonfirmasi bahwa agen telah berhasil terhubung dan terdaftar, jalankan perintah berikut di server Wazuh Manager Anda.</p>
+                <div class="code-block"><code>sudo /var/ossec/bin/agent_control -l</code></div>
+                <p>Jika berhasil, Anda akan melihat VM Honeypot Anda muncul di daftar agen, biasanya dengan status "Active".</p>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="doc-footer">
+            <div class="container">
+                <div class="footer-logo">
+                    <img src="Foto/Logo-Universitas-Atma-Jaya-Yogyakarta-Dianisa.com_.png" alt="Logo UAJY" />
+                    <p>Dokumentasi Tutorial. Diperbarui: 13 Oktober 2025.</p>
+                </div>
+            </div>
+    </footer>
+
+</body>
+</html>
