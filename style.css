@@ -9,7 +9,7 @@ body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     background-color: #F7F7F0; /* Off-White/Abu-abu Sangat Muda */
-    color: #333;
+    color: #333; /* INI SUDAH DIPERBAIKI */
 }
 
 a {
@@ -37,28 +37,22 @@ a:hover {
     border-bottom: 5px solid #8FBC8F; /* Hijau Olive Cerah */
 }
 
-.site-header h1 {
-    margin: 0; 
-}
-
 .site-header h1 a {
     color: #fff;
     float: left;
 }
 
-/* Navigasi di header */
-.site-header .nav-kanan ul {
+.site-header nav ul {
     float: right;
     list-style: none;
-    margin: 0;
 }
 
-.site-header .nav-kanan ul li {
+.site-header nav ul li {
     display: inline;
     padding: 0 10px;
 }
 
-.site-header .nav-kanan ul li a {
+.site-header nav ul li a {
     color: #fff;
 }
 
@@ -68,145 +62,87 @@ a:hover {
     clear: both;
 }
 
-
-/* ======================================= */
-/* === GAYA HALAMAN DOKUMENTASI (TUTORIAL) === */
-/* ======================================= */
-
-/* Wrapper untuk sidebar dan konten utama */
-.doc-content-wrapper {
+/* KONTEN UTAMA & SIDEBAR */
+.main-content {
+    padding: 20px 0;
     display: flex;
     gap: 20px;
-    padding: 20px 0;
 }
 
-/* Sidebar (Daftar Isi) */
-.doc-sidebar {
+.post-list {
+    flex: 3; 
+}
+
+.sidebar {
     flex: 1; 
     background: #fff;
     padding: 20px;
     border: 1px solid #DCDCDC; /* Abu-abu muda */
     border-radius: 5px;
-    
-    /* Membuat sidebar "menempel" saat scroll */
-    align-self: flex-start; 
-    position: sticky;
-    top: 20px; 
 }
 
-.toc h2 {
+/* POSTINGAN */
+.post {
+    background: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #DCDCDC; /* Abu-abu muda */
+    border-radius: 5px;
+}
+
+.post h2 a {
+    color: #556B2F; /* Judul postingan dengan warna Olive Gelap */
+    margin-bottom: 5px;
+    display: block;
+}
+
+.post-meta {
+    font-size: 0.9em;
+    color: #777;
     margin-bottom: 15px;
-    color: #556B2F; /* Judul widget dengan warna Olive Gelap */
-    border-bottom: 2px solid #eee;
+    border-bottom: 1px dashed #DCDCDC;
     padding-bottom: 10px;
 }
 
-.toc ul {
+.read-more {
+    display: inline-block;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #8FBC8F; /* Tautan Baca Selengkapnya */
+}
+
+/* SIDEBAR WIDGET */
+.widget {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.widget:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.widget h3 {
+    margin-bottom: 10px;
+    color: #556B2F; /* Judul widget dengan warna Olive Gelap */
+}
+
+.widget ul {
     list-style: none;
-    padding-left: 0;
 }
 
-.toc ul li {
-    margin-bottom: 8px;
-}
-
-.toc ul li a {
+.widget ul li a {
     display: block;
     padding: 5px 0;
     color: #696969; /* Tautan di widget */
 }
 
-.toc ul li a:hover {
+.widget ul li a:hover {
     color: #8FBC8F;
 }
 
-
-/* Konten Utama Dokumentasi */
-.doc-main-content {
-    flex: 3; 
-    background: #fff;
-    padding: 25px;
-    border: 1px solid #DCDCDC; /* Abu-abu muda */
-    border-radius: 5px;
-    min-width: 0; /* Perlu untuk layout flexbox */
-}
-
-.doc-section {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px dashed #DCDCDC;
-}
-
-.doc-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-}
-
-.doc-section h2 {
-    color: #556B2F; /* Judul postingan dengan warna Olive Gelap */
-    margin-bottom: 15px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #eee;
-}
-
-.doc-section h3 {
-    color: #333;
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
-
-.doc-section h4 {
-    color: #444;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.doc-section p {
-    margin-bottom: 10px;
-}
-
-.doc-section ul, .doc-section ol {
-    margin-left: 20px;
-    margin-bottom: 15px;
-}
-
-.doc-section ul li, .doc-section ol li {
-    margin-bottom: 8px;
-}
-
-/* ======================================= */
-/* == PERBAIKAN UNTUK SCROLL HORIZONTAL == */
-/* ======================================= */
-
-.code-block {
-    overflow-x: auto; /* Ini adalah kuncinya */
-    
-    /* Style tambahan agar blok kode terlihat rapi */
-    background-color: #f4f4f4; 
-    border: 1px solid #ddd;
-    padding: 10px;
-    margin: 10px 0;
-    font-family: monospace;
-    border-radius: 5px; 
-}
-
-/* Ini untuk memastikan kode di dalam tag <pre> 
-   tetap rapi dan tidak turun baris */
-.code-block pre {
-    white-space: pre; 
-}
-
-
 /* FOOTER */
-.doc-footer { /* Menggunakan class footer dari tutorial */
-    background: #556B2F; /* Hijau Olive Gelap */
-    color: #E0EEE0; /* Hijau sangat terang */
-    text-align: center;
-    padding: 1.5rem 0; 
-    margin-top: 20px;
-}
-
 .footer-logo {
     display: flex;
     align-items: center;
@@ -216,27 +152,28 @@ a:hover {
 }
 
 .footer-logo img {
-    height: 40px; 
+  height: 40px; /* Sesuaikan ukuran logo */
     width: auto;
-    border-radius: 4px;
+  border-radius: 4px; /* Opsional: sudut membulat */
 }
 
-/* Responsif */
+.site-footer {
+    background: #556B2F; /* Hijau Olive Gelap */
+    color: #E0EEE0; /* Hijau sangat terang */
+    text-align: center;
+    padding: 1rem 0;
+    margin-top: 20px;
+}
+
+
+/* Responsif Sederhana */
 @media (max-width: 768px) {
-    /* Layout Dokumentasi */
-    .doc-content-wrapper {
+    .main-content {
         flex-direction: column; 
     }
-    
-    .doc-sidebar {
-        position: static; /* Hapus "sticky" di mobile */
-        width: 100%;
-        margin-bottom: 20px;
-    }
 
-    /* Header */
     .site-header h1,
-    .site-header .nav-kanan {
+    .site-header nav {
         float: none;
         text-align: center;
     }
@@ -245,8 +182,27 @@ a:hover {
         margin-bottom: 10px;
     }
 
-    .site-header .nav-kanan ul li {
+    .site-header nav ul li {
         display: block;
         padding: 5px 0;
     }
+}
+
+.sidebar .widget ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.sidebar .widget ul li {
+    margin-bottom: 8px;
+}
+
+.sidebar .widget ul li a {
+    text-decoration: none;
+    color: #333;
+}
+
+.sidebar .widget ul li a i {
+    margin-right: 8px;
+    color: #555;
 }

@@ -1,4 +1,4 @@
-/* RESET & DASAR */
+/* RESET DASAR */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -6,7 +6,7 @@
 }
 
 body {
-    font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-family: Arial, sans-serif;
     line-height: 1.6;
     background-color: #F7F7F0; /* Off-White/Abu-abu Sangat Muda */
     color: #333;
@@ -18,246 +18,193 @@ a {
 }
 
 a:hover {
-    text-decoration: underline;
+    color: #556B2F; /* Hijau Olive Gelap */
 }
 
-/* CONTAINER */
+/* UTILITY: CONTAINER */
 .container {
-    width: 95%;
-    max-width: 1400px;
+    width: 90%;
+    max-width: 1200px;
     margin: auto;
+    overflow: hidden; 
 }
 
 /* HEADER */
-.doc-header {
+.site-header {
     background: #556B2F; /* Hijau Olive Gelap */
     color: #fff;
-    padding: 1.5rem 0;
-    border-bottom: 3px solid #8FBC8F; /* Hijau Olive Cerah */
-    margin-bottom: 20px;
+    padding: 1rem 0;
+    border-bottom: 5px solid #8FBC8F; /* Hijau Olive Cerah */
 }
 
-.doc-header h1 {
-    font-size: 1.8rem;
+.site-header h1 {
+    margin: 0; 
 }
 
-/* WRAPPER KONTEN UTAMA (menggunakan Flexbox) */
+.site-header h1 a {
+    color: #fff;
+    float: left;
+}
+
+/* Navigasi di header */
+.site-header .nav-kanan ul {
+    float: right;
+    list-style: none;
+    margin: 0;
+}
+
+.site-header .nav-kanan ul li {
+    display: inline;
+    padding: 0 10px;
+}
+
+.site-header .nav-kanan ul li a {
+    color: #fff;
+}
+
+.site-header::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+
+/* ======================================= */
+/* === GAYA HALAMAN DOKUMENTASI (TUTORIAL) === */
+/* ======================================= */
+
+/* Wrapper untuk sidebar dan konten utama */
 .doc-content-wrapper {
     display: flex;
-    gap: 30px;
-    padding: 0 0 40px 0;
+    gap: 20px;
+    padding: 20px 0;
 }
 
-/* SIDEBAR (Daftar Isi) */
+/* Sidebar (Daftar Isi) */
 .doc-sidebar {
-    flex: 0 0 280px; 
-    position: sticky; 
-    top: 20px;
-    height: fit-content;
+    flex: 1; 
+    background: #fff;
     padding: 20px;
-    background: #FFFFFF; /* Putih */
-    border: 1px solid #DCDCDC;
-    border-radius: 4px;
+    border: 1px solid #DCDCDC; /* Abu-abu muda */
+    border-radius: 5px;
+    
+    /* Membuat sidebar "menempel" saat scroll */
+    align-self: flex-start; 
+    position: sticky;
+    top: 20px; 
 }
 
-.doc-sidebar .toc h2 {
-    font-size: 1.2rem;
-    color: #556B2F; /* Hijau Olive Gelap */
-    margin-bottom: 10px;
+.toc h2 {
+    margin-bottom: 15px;
+    color: #556B2F; /* Judul widget dengan warna Olive Gelap */
     border-bottom: 2px solid #eee;
-    padding-bottom: 5px;
-}
-
-.doc-sidebar .toc ul {
-    list-style: none;
-}
-
-.doc-sidebar .toc li a {
-    display: block;
-    padding: 5px 0;
-    color: #495057;
-    transition: color 0.2s;
-}
-
-.doc-sidebar .toc li a:hover {
-    color: #6B8E23; /* Hijau Olive Sedang */
-    text-decoration: none;
-    padding-left: 5px;
-}
-
-/* KONTEN UTAMA DOKUMENTASI */
-.doc-main-content {
-    flex-grow: 1; 
-}
-
-.doc-section {
-    background: #FFFFFF; /* Putih */
-    padding: 30px;
-    margin-bottom: 25px;
-    border: 1px solid #DCDCDC;
-    border-radius: 4px;
-}
-
-.doc-section h2 {
-    font-size: 1.6rem;
-    color: #556B2F; /* Hijau Olive Gelap */
-    margin-bottom: 20px;
-    border-bottom: 2px solid #f0f0f0;
     padding-bottom: 10px;
 }
 
-.doc-section p {
-    margin-bottom: 15px;
-    text-align: justify;
-}
-
-.doc-section ul {
-    margin-left: 20px;
-    margin-bottom: 15px;
-    list-style: disc;
-}
-
-/* BLOCK KODE (Meniru tampilan terminal) */
-.code-block {
-    background-color: #36454F; /* Abu-abu Kebiruan Gelap (Slate) untuk kontras yang baik */
-    color: #D3D3D3; /* Abu-abu Sangat Cerah */
-    padding: 15px;
-    margin: 20px 0;
-    border-radius: 4px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 0.95rem;
-    overflow-x: auto; 
-}
-
-.code-block code {
-    display: block;
-    white-space: pre-wrap;
-    word-break: break-all;
-}
-
-/* STYLING UNTUK GAMBAR / SCREENSHOT */
-.image-container {
-    text-align: center; 
-    margin: 30px 0;
-    padding: 10px;
-    border: 1px solid #DCDCDC;
-    background-color: #F7F7F0; /* Off-White */
-    border-radius: 5px;
-}
-
-.image-container img {
-    max-width: 100%; 
-    height: auto; 
-    border: 1px solid #A9A9A9; /* Abu-abu Gelap */
-    border-radius: 3px;
-    box-shadow: 0 2px 8px rgba(85, 107, 47, 0.2); /* Shadow dengan sedikit sentuhan warna Olive */
-}
-
-.image-caption {
-    font-size: 0.85rem;
-    color: #696969; 
-    margin-top: 10px;
-    font-style: italic;
-}
-
-/* FOOTER */
-.doc-footer {
-    background: #556B2F; /* Hijau Olive Gelap */
-    color: #E0EEE0; /* Hijau sangat terang */
-    text-align: center;
-    padding: 1rem 0;
-    font-size: 0.9rem;
-}
-
-/* RESPONSIVITAS */
-@media (max-width: 992px) {
-    .doc-content-wrapper {
-        flex-direction: column; 
-    }
-
-    .doc-sidebar {
-        position: static; 
-        width: 100%;
-        margin-bottom: 20px;
-    }
-}
-
-@media (max-width: 600px) {
-    .doc-header h1 {
-        font-size: 1.5rem;
-    }
-    
-    .doc-section {
-        padding: 20px;
-    }
-
-    .image-container {
-        margin: 20px 0;
-    }
-}
-
-/* Dalam file docstyle.css */
-.doc-main-content .image-container {
-    margin: 20px 0; /* Tambahkan ruang vertikal */
-}
-
-.doc-main-content .image-container img {
-    /* Pastikan gambar tidak melebihi lebar containernya */
-    max-width: 100%; 
-    height: auto; /* Memastikan gambar menyesuaikan tinggi secara proporsional */
-    display: block;
-    border: 1px solid #ccc; /* Border sederhana agar terlihat lebih rapi */
-}
-
-.image-caption {
-    text-align: center;
-    font-style: italic;
-    margin-top: 5px;
-    color: #666;
-}
-
-.step-block ol {
-    padding-left: 20px;
-    margin-left: 10px;
-}
-
-.site-header .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #FFFFFF;
-}
-
-.site-header h1 a{
-    margin: 0;
-    color: #FFFFFF;
-    font-size: 24px;
-}
-
-.nav-kanan ul {
+.toc ul {
     list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    gap: 20px;
+    padding-left: 0;
 }
 
-.nav-kanan ul li a {
-    text-decoration: none;
-    color: #FFFFFF;
+.toc ul li {
+    margin-bottom: 8px;
+}
+
+.toc ul li a {
+    display: block;
+    padding: 5px 0;
+    color: #696969; /* Tautan di widget */
+}
+
+.toc ul li a:hover {
+    color: #8FBC8F;
+}
+
+
+/* Konten Utama Dokumentasi */
+.doc-main-content {
+    flex: 3; 
+    background: #fff;
+    padding: 25px;
+    border: 1px solid #DCDCDC; /* Abu-abu muda */
+    border-radius: 5px;
+    min-width: 0; /* Perlu untuk layout flexbox */
+}
+
+.doc-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed #DCDCDC;
+}
+
+.doc-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.doc-section h2 {
+    color: #556B2F; /* Judul postingan dengan warna Olive Gelap */
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.doc-section h3 {
+    color: #333;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.doc-section h4 {
+    color: #444;
+    margin-top: 15px;
+    margin-bottom: 5px;
     font-weight: bold;
 }
 
-.nav-kanan ul li a:hover {
-    text-decoration: underline;
+.doc-section p {
+    margin-bottom: 10px;
 }
 
-.site-header {
-    background-color: #556B2F; /* Hijau Olive Gelap */
-    color: #fff;
-    padding: 1.5rem 0;
-    border-bottom: 3px solid #8FBC8F; /* Hijau Olive Cerah */
-    margin-bottom: 20px;
+.doc-section ul, .doc-section ol {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.doc-section ul li, .doc-section ol li {
+    margin-bottom: 8px;
+}
+
+/* ======================================= */
+/* == PERBAIKAN UNTUK SCROLL HORIZONTAL == */
+/* ======================================= */
+
+.code-block {
+    overflow-x: auto; /* Ini adalah kuncinya */
+    
+    /* Style tambahan agar blok kode terlihat rapi */
+    background-color: #f4f4f4; 
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 10px 0;
+    font-family: monospace;
+    border-radius: 5px; 
+}
+
+/* Ini untuk memastikan kode di dalam tag <pre> 
+   tetap rapi dan tidak turun baris */
+.code-block pre {
+    white-space: pre; 
+}
+
+
+/* FOOTER */
+.doc-footer { /* Menggunakan class footer dari tutorial */
+    background: #556B2F; /* Hijau Olive Gelap */
+    color: #E0EEE0; /* Hijau sangat terang */
+    text-align: center;
+    padding: 1.5rem 0; 
+    margin-top: 20px;
 }
 
 .footer-logo {
@@ -269,7 +216,37 @@ a:hover {
 }
 
 .footer-logo img {
-  height: 40px; /* Sesuaikan ukuran logo */
+    height: 40px; 
     width: auto;
-  border-radius: 4px; /* Opsional: sudut membulat */
+    border-radius: 4px;
+}
+
+/* Responsif */
+@media (max-width: 768px) {
+    /* Layout Dokumentasi */
+    .doc-content-wrapper {
+        flex-direction: column; 
+    }
+    
+    .doc-sidebar {
+        position: static; /* Hapus "sticky" di mobile */
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    /* Header */
+    .site-header h1,
+    .site-header .nav-kanan {
+        float: none;
+        text-align: center;
+    }
+
+    .site-header h1 {
+        margin-bottom: 10px;
+    }
+
+    .site-header .nav-kanan ul li {
+        display: block;
+        padding: 5px 0;
+    }
 }
